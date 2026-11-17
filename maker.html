@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>만들기 도우미 · 법정 추리 수업 게임 키트</title>
+<!-- 글꼴: 인터넷이 되면 케리스 배움체(KERIS, 학교 안심 폰트)를 받아 쓴다 (기다리지 않는다. 못 받으면 기기 글꼴) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maker-SSAM/korean-ofl-fonts@v1.0.0/fonts/keris-baeum/keris-baeum.css" media="print" onload="this.media='all'">
+<script src="ai/guide.js"></script>
+<script>document.documentElement.setAttribute('data-ed', (window.KIT_GUIDE || {}).판 || '');</script>
+<style>
+  :root {
+    --ink: #1e2230; --sub: #5c6373; --faint: #8b90a0; --line: #e5e0d6; --field: #cdc6b7; --bg: #f3f0e9; --card: #fff;
+    --main: #1c2b52; --main-2: #2a3c6e; --main-soft: #edf0f7; --accent: #e2bf6e; --gold: #85621a; --gold-soft: #f5edda;
+    --ok: #1d7446; --ok-soft: #e8f4ed; --warn-soft: #fbf1df; --err: #b0261c; --err-soft: #fbebe8;
+    --font: "KERIS BAEUM", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "맑은 고딕", sans-serif;
+    --mono: ui-monospace, "D2Coding", "SF Mono", Consolas, monospace;
+    color-scheme: light;
+  }
+  /* 범용판은 칠판색, 역사판은 남색 (예시 게임의 색과 같게) */
+  :root[data-ed="general"] { --main: #1f4536; --main-2: #2b5a47; --main-soft: #eaf2ed; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: calc(100vh / var(--z, 1)); display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.55; word-break: keep-all; overflow-wrap: break-word; }
+  code { font-family: var(--mono); font-size: .88em; background: var(--bg); padding: 0 4px; border-radius: 3px; }
+  a { color: var(--main); }
+  .hidden { display: none !important; }
+
+  /* 버튼 */
+  button { font: inherit; font-size: 14.5px; font-weight: 600; line-height: 1.3; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--main); background: var(--main); color: #fff; cursor: pointer; }
+  button:hover { background: var(--main-2); border-color: var(--main-2); }
+  button.sub { background: #fff; color: var(--main); border-color: var(--field); }
+  button.sub:hover { background: var(--main-soft); border-color: var(--main); }
+  button.small { padding: 4px 9px; font-size: 13px; }
+  button.big { padding: 10px 18px; font-size: 15.5px; }
+  button:disabled { opacity: .4; cursor: default; pointer-events: none; }
+  button:focus-visible { outline: 2px solid var(--main); outline-offset: 2px; }
+  .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+  .said { font-size: 13.5px; color: var(--ok); font-weight: 600; }
+
+  /* 위: 이름과 단계 */
+  .top { position: sticky; top: 0; z-index: 10; }
+  .top-bar { background: var(--main); color: #fff; }
+  .top-bar .in, .steps .in, .bar .in, main { max-width: var(--w, 920px); margin: 0 auto; }
+  .top-bar .in { display: flex; align-items: center; gap: 10px; padding: 7px 16px; min-height: 44px; }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; letter-spacing: -.01em; color: inherit; text-decoration: none; border-radius: 6px; padding: 2px 6px; margin-left: -6px; }
+  .brand:hover { background: rgba(255, 255, 255, .1); }
+  .brand:hover .nm { text-decoration: underline; text-underline-offset: 3px; }
+  .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .brand svg { color: var(--accent); flex: none; }
+  .brand .ed { font-size: 12px; font-weight: 600; color: var(--accent); border: 1px solid rgba(226, 191, 110, .6); border-radius: 4px; padding: 0 6px; line-height: 1.6; }
+  .top-bar .help-btn { margin-left: auto; background: transparent; border-color: rgba(255, 255, 255, .4); padding: 4px 11px; font-size: 13.5px; }
+  .top-bar .help-btn:hover { background: rgba(255, 255, 255, .12); }
+  .steps { background: #fff; border-bottom: 1px solid var(--line); }
+  .steps .in { display: flex; padding: 0 8px; }
+  .steps button { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 4px 7px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: none; color: var(--sub); font-size: 14px; white-space: nowrap; }
+  .steps button:hover { background: var(--bg); color: var(--ink); border-color: transparent; }
+  .steps .n { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--field); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+  .steps .t { overflow: hidden; text-overflow: ellipsis; }
+  .steps button.done .n { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .steps button[aria-current="step"], .steps button[aria-current="step"]:hover { color: var(--main); border-bottom-color: var(--main); }
+  .steps button[aria-current="step"] .n { background: var(--main); border-color: var(--main); color: #fff; }
+
+  /* 가운데: 한 번에 한 단계만 */
+  main { flex: 1 0 auto; width: 100%; padding: 14px 16px 18px; display: flex; flex-direction: column; }
+  .page { flex: 1 0 auto; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px 20px; } /* 짧은 쪽도 아래 단추까지 채운다 */
+  .head { display: flex; align-items: flex-start; gap: 10px 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .head > div:first-child { flex: 1 1 320px; min-width: 0; }
+  .head .tools { display: flex; gap: 6px; flex-wrap: wrap; }
+  .kicker { margin: 0; font-size: 13px; font-weight: 700; color: var(--gold); }
+  .page h2 { margin: 1px 0 3px; font-size: 21px; font-weight: 700; letter-spacing: -.02em; line-height: 1.35; }
+  .lead { margin: 0; color: var(--sub); font-size: 14.5px; }
+  h3.sh { margin: 18px 0 8px; font-size: 15px; font-weight: 700; }
+  .note { background: var(--main-soft); border-radius: 6px; padding: 9px 12px; margin-top: 12px; font-size: 13.5px; }
+  .note.warn { background: var(--warn-soft); color: #5a3b0a; }
+  .note button { margin-left: 4px; }
+  .tips { margin: 10px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--sub); }
+  .tips li { margin: 3px 0; }
+  .tips b { color: var(--ink); font-weight: 600; }
+  details { margin-top: 12px; }
+  details > summary { cursor: pointer; font-weight: 600; color: var(--main); font-size: 14px; }
+  .checks label { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; padding: 2px 0; cursor: pointer; }
+  .checks input, .optlist input { margin: 4px 0 0; flex: none; accent-color: var(--main); }
+  .checks small { color: var(--sub); }
+
+  /* 사용법 */
+  .guide { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16px 32px; }
+  .guide .lead { color: var(--ink); font-size: 15px; margin-top: 4px; }
+  .guide dl { margin: 12px 0 0; font-size: 14px; }
+  .guide dt { font-weight: 700; margin-top: 10px; }
+  .guide dd { margin: 1px 0 0; color: var(--sub); }
+  .gsteps { list-style: none; margin: 0; padding: 0; }
+  .gsteps li { display: grid; grid-template-columns: 26px 1fr; gap: 0 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .gsteps li:first-child { border-top: 0; padding-top: 2px; }
+  .gsteps .n { width: 26px; height: 26px; border-radius: 50%; background: var(--main); color: #fff; font-weight: 700; font-size: 13.5px; display: flex; align-items: center; justify-content: center; }
+  .gsteps b { font-size: 15px; }
+  .gsteps p { margin: 2px 0 0; color: var(--sub); font-size: 14px; }
+  .where { display: inline-block; margin-left: 7px; font-size: 11.5px; font-weight: 700; padding: 0 6px; border-radius: 3px; vertical-align: 1px; background: var(--main-soft); color: var(--main); }
+  .where.ai { background: var(--gold-soft); color: var(--gold); }
+  .where.opt { background: var(--bg); color: var(--sub); }
+  .credit { margin: 16px 0 0; padding-top: 10px; border-top: 1px solid var(--line); color: var(--faint); font-size: 12.5px; }
+
+  /* 1. 설계서 */
+  .subtabs { display: flex; align-items: center; gap: 2px; margin: -2px 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .subtabs button { background: none; border: 0; color: var(--sub); font-size: 13.5px; padding: 4px 9px; border-radius: 5px; white-space: nowrap; }
+  .subtabs button:hover { background: var(--bg); color: var(--ink); }
+  .subtabs button[aria-current="true"] { background: var(--main-soft); color: var(--main); }
+  .subtabs .saved { margin-left: auto; padding-left: 10px; color: var(--faint); font-size: 12.5px; white-space: nowrap; }
+  .fpage { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+  .fld { min-width: 0; }
+  .fld.wide { grid-column: 1 / -1; }
+  .fld .l { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14.5px; }
+  .lrow { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; }
+  .lrow .l { flex: 1 1 auto; }
+  .ask-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ask-tip { margin: -4px 0 14px; padding: 8px 12px; border-radius: 6px; background: var(--gold-soft); color: #5a4512; font-size: 13.5px; }
+  .req { font-size: 11.5px; font-weight: 700; color: var(--gold); background: var(--gold-soft); padding: 0 5px; border-radius: 3px; line-height: 1.6; }
+  .help { margin: 1px 0 0; color: var(--sub); font-size: 13px; line-height: 1.45; }
+  input[type=text], textarea, select { display: block; width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid var(--field); border-radius: 6px; font: inherit; font-size: 14.5px; background: #fff; color: var(--ink); }
+  textarea { min-height: 78px; resize: vertical; line-height: 1.5; }
+  textarea.code { font-family: var(--mono); font-size: 12.5px; line-height: 1.45; min-height: 190px; white-space: pre; overflow: auto; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--main); outline-offset: -1px; border-color: var(--main); }
+  ::placeholder { color: #a5aab5; }
+  .optlist { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; margin-top: 6px; }
+  .optlist label { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; padding: 2px 0; cursor: pointer; }
+
+  /* 2. AI에게 주기 */
+  .give { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+  .give .info { flex: 1 1 220px; }
+  .give .info b { display: block; font-size: 15px; }
+  .give .info span { color: var(--sub); font-size: 13.5px; }
+  .give .btns { margin: 0; }
+  .give + .checks { margin-top: 10px; }
+  .flow { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .flow li { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; color: var(--sub); }
+  .flow li b { display: block; color: var(--ink); font-size: 14.5px; margin: 1px 0 2px; }
+  .flow .k { font-size: 12px; font-weight: 700; color: var(--gold); }
+
+  /* 3. 점검 */
+  .gt { margin: 16px 0 6px; font-size: 16px; font-weight: 700; }
+  .stat { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .stat div { flex: 1 1 auto; min-width: 76px; padding: 6px 12px; border-right: 1px solid var(--line); }
+  .stat div:last-child { border-right: 0; }
+  .stat b { display: block; font-size: 16.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat small { color: var(--sub); font-size: 12.5px; }
+  .issues { margin-top: 10px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .issues:empty { display: none; }
+  .issue { display: flex; gap: 10px; padding: 8px 12px; font-size: 14px; border-top: 1px solid var(--line); background: #fff; }
+  .issue:first-child { border-top: 0; }
+  .issue .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; background: var(--faint); }
+  .issue.err { background: var(--err-soft); }
+  .issue.err .dot { background: var(--err); }
+  .issue.warn .dot { background: #d68a12; }
+  .issue.ok { background: var(--ok-soft); }
+  .issue.ok .dot { background: var(--ok); }
+  .issue .tx { min-width: 0; }
+  .issue b { display: block; font-weight: 700; }
+  .issue small { display: block; color: var(--sub); font-size: 13px; margin-top: 1px; }
+  .issue code { display: block; overflow: auto; margin-top: 4px; background: #fff; padding: 2px 6px; white-space: pre; }
+  #result details .checks { margin-top: 6px; }
+
+  .names { margin-top: 12px; }
+  .name-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px 14px; margin-top: 8px; }
+  .name-grid label { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .name-grid span { flex: none; min-width: 66px; color: var(--sub); }
+  .name-grid input { margin-top: 0; }
+
+  /* 4. 그림 */
+  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 8px; margin-top: 8px; }
+  .slot { border: 1px solid var(--line); border-radius: 8px; padding: 6px; text-align: center; background: #fff; font-size: 12.5px; }
+  .slot.drag { outline: 2px dashed var(--main); outline-offset: 2px; }
+  .slot .pic { width: 100%; aspect-ratio: 1; border-radius: 5px; background: repeating-conic-gradient(#efece5 0 25%, #fff 0 50%) 0 0 / 14px 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; color: #a9a49a; font-size: 24px; }
+  .slot.wide .pic { aspect-ratio: 3 / 2; }
+  .slot .pic img { width: 100%; height: 100%; object-fit: contain; }
+  .slot b { display: block; margin-top: 5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .slot .row { display: flex; gap: 4px; justify-content: center; margin-top: 5px; }
+
+  .imgtools { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: flex-end; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); margin-bottom: 12px; }
+  .imgtools .fld { flex: 1 1 300px; }
+  .imgtools .tools-r { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .chk { display: flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer; }
+  .chk input { accent-color: var(--main); }
+  #images > .note { margin: 12px 0 4px; }
+  #images details > .help { margin: 6px 0 0; }
+  .slot .pic { border: 0; padding: 0; font-family: inherit; cursor: pointer; }
+  .slot .pic:hover { outline: 2px solid var(--main); outline-offset: 1px; background-color: transparent; }
+  .slot.done { border-color: var(--ok); }
+  .slot .row .ask { flex: 1; min-width: 0; padding-inline: 4px; }
+  .slot .row .x { flex: none; width: 30px; padding-inline: 0; }
+  .slot.done b::before { content: '✓ '; color: var(--ok); }
+  .toast { position: fixed; left: 50%; bottom: 70px; transform: translate(-50%, 10px); max-width: min(560px, 92vw); background: var(--ink); color: #fff; font-size: 14px; padding: 9px 14px; border-radius: 6px; box-shadow: 0 6px 20px rgba(0, 0, 0, .2); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 20; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+  /* 5. 해 보기 · 내보내기 */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .blk { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+  .blk h3 { margin: 0; font-size: 16px; }
+  .blk p { margin: 2px 0 0; color: var(--sub); font-size: 13.5px; }
+  .blk .btns { flex-direction: column; align-items: stretch; }
+  #need-check { margin: 0 0 12px; }
+
+  /* 아래: 이전 · 다음 */
+  .bar { position: sticky; bottom: 0; z-index: 10; background: rgba(255, 255, 255, .97); border-top: 1px solid var(--line); }
+  .bar .in { display: flex; align-items: center; gap: 10px; padding: 9px 16px; }
+  .bar .hint { flex: 1; min-width: 0; text-align: center; color: var(--sub); font-size: 13.5px; }
+  .bar .gap { visibility: hidden; }
+  #btn-next { padding: 9px 18px; font-size: 15px; }
+
+  #autoframe { position: absolute; left: -3000px; top: 0; width: 960px; height: 640px; border: 0; }
+
+  /* 넓은 화면: 더 넓게 쓰고 글자와 칸을 조금 키운다 */
+  @media (min-width: 1200px) {
+    :root { --w: min(1280px, 94vw); }
+    body { font-size: 16px; }
+    .top-bar .in { min-height: 52px; padding-inline: 24px; }
+    .brand { font-size: 18px; }
+    .top-bar .help-btn { font-size: 14.5px; padding: 5px 14px; }
+    .steps button { font-size: 15.5px; padding: 12px 6px 10px; }
+    .steps .n { width: 26px; height: 26px; font-size: 13.5px; }
+    main { padding: 20px 24px 22px; }
+    .page { padding: 26px 34px 30px; }
+    .kicker { font-size: 14px; }
+    .page h2 { font-size: 26px; }
+    .lead { font-size: 16px; }
+    .subtabs button { font-size: 15px; padding: 5px 11px; }
+    .fpage { gap: 18px 28px; }
+    .fld .l { font-size: 16px; }
+    .help { font-size: 14px; }
+    input[type=text], textarea, select { font-size: 16px; padding: 10px 13px; }
+    textarea { min-height: 96px; }
+    button { font-size: 15.5px; }
+    button.small { font-size: 14px; }
+    button.big { font-size: 17px; padding: 12px 22px; }
+    .guide { gap: 20px 48px; }
+    .guide .lead, .gsteps b { font-size: 16.5px; }
+    .guide dl, .gsteps p, .flow li, .tips, .note, .checks label, .optlist label, .issue, .ask-tip { font-size: 15px; }
+    .flow li b { font-size: 16px; }
+    .slots { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .bar .in { padding: 12px 24px; }
+    .bar .hint { font-size: 15px; }
+    #btn-next { font-size: 16.5px; padding: 11px 24px; }
+  }
+  /* 아주 넓은 화면: 화면 전체를 키운다 (브라우저 확대처럼). 빈 여백 대신 내용이 화면을 채우게 */
+  @media (min-width: 1500px) { :root { --z: 1.1; --w: 1280px; } }
+  @media (min-width: 1700px) { :root { --z: 1.2; } }
+  @media (min-width: 1900px) { :root { --z: 1.3; } }
+  @media (min-width: 2300px) { :root { --z: 1.5; } }
+  html { zoom: var(--z, 1); }
+  @media (max-width: 760px) {
+    .guide { grid-template-columns: 1fr; }
+    .flow { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    main { padding: 10px 10px 14px; }
+    .page { padding: 14px 14px 16px; }
+    .page h2 { font-size: 19px; }
+    .steps .in { padding: 0 4px; }
+    .steps button { flex: 0 0 auto; padding-inline: 8px; }
+    .steps button .t { display: none; }
+    .steps button[aria-current="step"] { flex: 1 1 auto; }
+    .steps button[aria-current="step"] .t { display: inline; }
+    .fpage, .optlist, .two { grid-template-columns: 1fr; }
+    .subtabs .saved { display: none; }
+    .bar .hint { display: none; }
+    .bar .in { justify-content: space-between; padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-bar"><div class="in">
+    <a class="brand" id="home" href="https://bon17.github.io/court-game-kit/" title="키트 첫 화면으로 가기 (쓴 내용은 저장돼 있어요)">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v17M8 20.5h8M4.5 6.5h15"/><path d="M4.5 6.5 2 13M4.5 6.5 7 13M1.6 13a2.9 2.9 0 0 0 5.8 0z"/><path d="M19.5 6.5 17 13M19.5 6.5 22 13M16.6 13a2.9 2.9 0 0 0 5.8 0z"/></svg>
+      <span class="nm">만들기 도우미</span><span class="ed" id="edition"></span>
+    </a>
+    <button class="help-btn" id="btn-guide" type="button">사용법</button>
+  </div></div>
+  <nav class="steps" aria-label="만드는 단계"><div class="in" id="steps">
+    <button type="button" data-go="1"><span class="n">1</span><span class="t">설계서</span></button>
+    <button type="button" data-go="2"><span class="n">2</span><span class="t">AI에게 주기</span></button>
+    <button type="button" data-go="3"><span class="n">3</span><span class="t">답 넣고 점검</span></button>
+    <button type="button" data-go="4"><span class="n">4</span><span class="t">그림 만들기</span></button>
+    <button type="button" data-go="5"><span class="n">5</span><span class="t">해 보기 · 내보내기</span></button>
+  </div></nav>
+</div>
+
+<main>
+
+<section class="page" id="guide" data-step="guide">
+  <div class="guide">
+    <div>
+      <p class="kicker">사용법</p>
+      <h2>수업 설계를 적으면, 내 AI가 게임을 써 줍니다</h2>
+      <p class="lead" id="intro"></p>
+      <dl>
+        <dt>준비할 것</dt>
+        <dd>평소 쓰는 AI(Claude, ChatGPT, Gemini 등)의 대화창과 수업 메모. 처음 한 편은 30분쯤 걸립니다.</dd>
+        <dt>어떤 게임이 나오나요?</dt>
+        <dd>학생이 증언 속 모순을 찾아 증거를 내미는 법정 추리 게임입니다. <a href="index.html" target="_blank">예시 게임</a>을 먼저 해 보면 감이 옵니다.</dd>
+        <dt>쓴 내용은</dt>
+        <dd>이 브라우저에 저장되어, 창을 닫았다 열어도 이어서 할 수 있습니다. 다른 컴퓨터에서 고치려면 5단계에서 받은 게임 파일을 3단계에서 불러오세요.</dd>
+      </dl>
+      <div class="btns">
+        <button class="big" id="btn-start" type="button">시작하기</button>
+        <button class="sub big" id="btn-start-example" type="button">예시로 채워서 둘러보기</button>
+      </div>
+    </div>
+    <ol class="gsteps">
+      <li><span class="n">1</span><div><b>설계서 쓰기</b><span class="where">이 화면</span><p>단원, 학습 목표, 학생들이 자주 틀리는 생각을 적습니다. 아는 만큼만 적고 빈칸은 AI에게 맡겨도 됩니다.</p></div></li>
+      <li><span class="n">2</span><div><b>AI에게 주기</b><span class="where ai">AI 대화창</span><p>이 화면이 만든 글을 복사해 AI에게 붙여 넣습니다. AI가 사건 설계안을 보여 주면 고칠 점을 말하고, 마음에 들면 "좋아, 데이터로 써 줘"라고 합니다.</p></div></li>
+      <li><span class="n">3</span><div><b>답 넣고 점검</b><span class="where">이 화면</span><p>AI가 써 준 데이터를 붙여 넣고 [점검하기]를 누릅니다. 문제가 나오면 수정 요청 글을 복사해 AI에게 다시 줍니다.</p></div></li>
+      <li><span class="n">4</span><div><b>그림 만들기</b><span class="where ai">그림 AI</span><p>그림마다 프롬프트를 복사해 그림 AI에 붙여 넣고, 나온 그림을 칸에 넣습니다. 그림이 없어도 게임은 됩니다.</p></div></li>
+      <li><span class="n">5</span><div><b>해 보기 · 내보내기</b><span class="where">이 화면</span><p>직접 끝까지 해 본 뒤 게임 파일 하나(.html)로 받아 학생에게 나눠 줍니다.</p></div></li>
+    </ol>
+  </div>
+  <p class="credit" id="foot"></p>
+</section>
+
+<section class="page hidden" id="s1" data-step="1">
+  <div class="head">
+    <div>
+      <p class="kicker">1단계 · 수업 설계서 <span id="sub-no"></span></p>
+      <h2 id="sub-title"></h2>
+      <p class="lead" id="sub-desc"></p>
+    </div>
+    <div class="tools">
+      <button class="sub small" id="btn-example" type="button">예시로 채워 보기</button>
+      <button class="sub small" id="btn-clear" type="button">모두 지우기</button>
+    </div>
+  </div>
+  <div class="subtabs" id="subtabs"></div>
+  <p class="ask-tip hidden" id="ask-tip">칸에 생각나는 것을 간단히 적고 <b>[AI에게 물어보기]</b>를 누르세요. AI 대화창에 붙여 넣고, 받은 답을 복사해 <b>[AI 답 붙여 넣기]</b>를 누르면 칸이 채워집니다. 그다음 고치거나 더 적어도 됩니다.</p>
+  <div id="form"></div>
+</section>
+
+<section class="page hidden" id="s2" data-step="2">
+  <div class="head"><div>
+    <p class="kicker">2단계 · AI에게 주기</p>
+    <h2>이 글을 복사해서 AI에게 붙여 넣으세요</h2>
+    <p class="lead">평소 쓰는 AI(Claude, ChatGPT, Gemini 등)의 새 대화창에 통째로 붙여 넣습니다.</p>
+  </div></div>
+  <div class="give">
+    <div class="info"><b>AI에게 줄 글</b><span id="prompt-size"></span></div>
+    <div class="btns">
+      <span class="said" id="said-prompt"></span>
+      <button class="sub" id="btn-save-prompt" type="button">파일로 받기 (.md)</button>
+      <button class="big" id="btn-copy" type="button">복사하기</button>
+    </div>
+  </div>
+  <div class="checks">
+    <label><input type="checkbox" id="opt-plan" checked><span>먼저 사건 설계안을 보여 달라고 하기 <small>(권장)</small></span></label>
+    <label><input type="checkbox" id="opt-sample" checked><span>완성된 예시 게임을 함께 보내기 <small>(권장: AI가 형식을 덜 틀립니다. 글이 길어집니다)</small></span></label>
+    <label class="hidden" id="opt-check-row"><input type="checkbox" id="opt-check" checked><span id="opt-check-text"></span></label>
+  </div>
+  <div class="note warn hidden" id="prompt-miss"></div>
+  <details><summary>글 내용 보기</summary><textarea class="code" id="prompt" readonly aria-label="AI에게 줄 글"></textarea></details>
+  <h3 class="sh">붙여 넣은 다음에는</h3>
+  <ol class="flow" id="flow"></ol>
+  <ul class="tips">
+    <li>답이 중간에 끊기면 <b>"끊긴 곳부터 이어서 써 줘"</b>라고 하세요.</li>
+    <li>고친 뒤에는 <b>"전체 데이터를 다시 써 줘"</b>라고 해서 통째로 받으세요.</li>
+    <li>글이 너무 길다고 하면 [파일로 받기]로 받아서 첨부하세요.</li>
+    <li class="hidden" id="verify-tip">AI가 보여 주는 <b>「사실 검증표」</b>에서 「확인 필요」라고 한 것은 꼭 직접 확인하세요. 3단계 점검 뒤 「선생님이 확인할 사실」에도 나옵니다.</li>
+  </ul>
+</section>
+
+<section class="page hidden" id="s3" data-step="3">
+  <div class="head"><div>
+    <p class="kicker">3단계 · 답 넣고 점검</p>
+    <h2>AI의 답을 붙여 넣고 점검하세요</h2>
+    <p class="lead">AI가 써 준 데이터(<code>DATA.게임 = …</code>, <code>DATA.ep1 = …</code>)를 통째로 붙여 넣습니다. 앞뒤의 설명 글이 섞여도 괜찮습니다.</p>
+  </div></div>
+  <textarea class="code" id="paste" placeholder="여기에 AI의 답을 붙여 넣으세요" aria-label="AI의 답"></textarea>
+  <div class="btns">
+    <button id="btn-check" type="button">점검하기</button>
+    <button class="sub" id="btn-load-file" type="button">파일에서 불러오기</button>
+    <button class="sub" id="btn-load-folder" type="button">my-game 폴더의 게임 불러오기</button>
+    <input type="file" id="file" class="hidden" accept=".html,.htm,.js,.txt,.md">
+    <span class="said" id="said-check"></span>
+  </div>
+  <div id="result"></div>
+</section>
+
+<section class="page hidden" id="s4" data-step="4">
+  <div class="head"><div>
+    <p class="kicker">4단계 · 그림 만들기</p>
+    <h2>그림 AI로 그림을 만들어 넣으세요</h2>
+    <p class="lead">그림이 없어도 게임은 되지만, 그림을 넣어야 게임이 완성됩니다. 넣은 그림은 5단계에서 받는 게임 파일 하나에 함께 들어갑니다.</p>
+  </div></div>
+  <div id="images"></div>
+</section>
+
+<section class="page hidden" id="s5" data-step="5">
+  <div class="head"><div>
+    <p class="kicker">5단계 · 해 보기 · 내보내기</p>
+    <h2>직접 해 보고, 파일 하나로 받으세요</h2>
+  </div></div>
+  <div class="note warn hidden" id="need-check">아직 해 볼 수 없어요. 3단계에서 오류 없이 점검을 마쳐야 합니다. <button class="sub small" type="button" data-go="3">3단계로 가기</button></div>
+  <div class="two">
+    <div class="blk">
+      <h3>직접 해 보기</h3>
+      <p>학생이 보는 화면 그대로 새 창에서 열립니다.</p>
+      <div class="btns">
+        <button id="btn-play" type="button" disabled>새 창에서 해 보기</button>
+        <button class="sub" id="btn-play-teacher" type="button" disabled>교사용으로 열기 (장면 골라 시작)</button>
+      </div>
+    </div>
+    <div class="blk">
+      <h3>학생에게 나눠 주기</h3>
+      <p>게임 파일 하나(.html)에 그림까지 모두 들어갑니다. 두 번 누르면 열립니다.</p>
+      <div class="btns">
+        <button id="btn-export" type="button" disabled>게임 파일 하나로 받기 (.html)</button>
+        <button class="sub" id="btn-export-js" type="button" disabled>폴더용 파일 받기 (settings.js, story.js)</button>
+      </div>
+    </div>
+  </div>
+  <div class="btns"><span class="said" id="said-export"></span></div>
+  <ul class="tips">
+    <li>받은 파일은 학급 게시판이나 메신저로 나눠 주거나, 누리집에 올려 주소로 알려 주세요. (자세한 방법: <code>docs/학생에게_나눠주기.md</code>)</li>
+    <li>나중에 고치려면 그 파일을 3단계의 [파일에서 불러오기]로 다시 불러오면 됩니다. 넣은 그림도 함께 돌아옵니다.</li>
+  </ul>
+</section>
+
+</main>
+
+<div class="bar"><div class="in">
+  <button class="sub" id="btn-prev" type="button">← 이전</button>
+  <span class="hint" id="bar-hint" aria-live="polite"></span>
+  <button id="btn-next" type="button">다음 →</button>
+</div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<iframe id="autoframe" class="hidden" title="자동 실행 점검" aria-hidden="true"></iframe>
+
+<script src="engine/js/defaults.js"></script>
+<script src="engine/js/check.js"></script>
+<script src="engine/js/parse.js"></script>
+<script src="engine/js/export.js"></script>
+<script src="engine/bundle.js"></script>
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const h = (tag, attrs = {}, ...kids) => {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) { if (v == null || v === false) continue; if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? '' : v); }
+    for (const kid of kids.flat()) { if (kid == null || kid === false) continue; e.append(kid.nodeType ? kid : document.createTextNode(String(kid))); }
+    return e;
+  };
+  const GUIDE = window.KIT_GUIDE, BUNDLE = window.KIT_BUNDLE, D = window.KIT_DEFAULTS;
+  if (!GUIDE || !BUNDLE) { document.body.innerHTML = '<p style="padding:24px">필요한 파일(engine/bundle.js, ai/guide.js)을 찾지 못했어요. 키트 폴더를 통째로 받은 뒤 그 안의 maker.html 을 열어 주세요.</p>'; return; }
+  const KEY = 'kit-maker-' + GUIDE.판;
+  const S = { form: {}, text: '', data: null, images: {}, audio: {}, errors: 0, at: null, gave: false, exported: false, style: '', cut: true };
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; S.form = saved.form || {}; S.text = saved.text || ''; S.gave = !!saved.gave; S.style = saved.style || ''; S.cut = saved.cut !== false; } catch (e) {}
+  const returning = Object.keys(S.form).length > 0 || !!S.text.trim();
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify({ form: S.form, text: S.text.length < 800000 ? S.text : '', at: S.at, gave: S.gave, style: S.style, cut: S.cut })); } catch (e) {} };
+  const say = (id, t) => { const el = $(id); el.textContent = t; if (t) setTimeout(() => { if (el.textContent === t) el.textContent = ''; }, 4000); };
+  const download = (name, text, type) => { const a = h('a', { href: URL.createObjectURL(new Blob([text], { type: type || 'text/plain' })), download: name }); document.body.append(a); a.click(); a.remove(); };
+  const copy = async (text) => { try { await navigator.clipboard.writeText(text); return true; } catch (e) { const t = h('textarea'); t.value = text; document.body.append(t); t.select(); const ok = document.execCommand('copy'); t.remove(); return ok; } };
+
+  $('#edition').textContent = GUIDE.판이름;
+  // 「만들기 도우미」를 누르면 키트 첫 화면으로. 저장소 전체(court-game-kit 폴더, 누리집)에서 열었으면 바로 위의 첫 화면,
+  // 한 판만 내려받아 열었으면 누리집의 첫 화면으로 간다
+  if (/\/court-game-kit\/(general|history)\/maker\.html$/.test(decodeURIComponent(location.pathname))) $('#home').href = '../' + (location.protocol === 'file:' ? 'index.html' : '');
+  $('#intro').textContent = GUIDE.소개 || '';
+  $('#foot').textContent = '법정 추리 수업 게임 키트 ' + GUIDE.판이름 + ' · 원작 「기억의 법정」 BONSSAM · CC BY-NC-SA 4.0';
+
+  // ─────────── 단계 넘기기 ───────────
+  // 사용법 → 1(설계서, 여러 쪽) → 2 → 3 → 4 → 5. 화면 아래 [다음]으로 넘기고, 위의 단계 이름을 눌러 바로 갈 수도 있다
+  const fields = GUIDE.설계서;
+  const groups = (() => {
+    const byId = Object.fromEntries(fields.map((f) => [f.id, f]));
+    const gs = (GUIDE.쪽 || []).map((g) => ({ 이름: g.이름, 설명: g.설명 || '', 칸: (g.칸 || []).map((id) => byId[id]).filter(Boolean) })).filter((g) => g.칸.length);
+    const used = new Set(gs.flatMap((g) => g.칸.map((f) => f.id)));
+    const rest = fields.filter((f) => !used.has(f.id));
+    if (!gs.length) for (let i = 0; i < rest.length; i += 5) gs.push({ 이름: '설계서 ' + (gs.length + 1), 설명: '', 칸: rest.slice(i, i + 5) });
+    else if (rest.length) gs[gs.length - 1].칸.push(...rest);
+    return gs;
+  })();
+  const missing = () => fields.filter((f) => f.필수 && !String(S.form[f.id] || '').trim());
+  const NEXT_NAME = { 2: 'AI에게 주기', 3: '답 넣고 점검', 4: '그림 만들기', 5: '해 보기' };
+
+  function go(step, sub) {
+    if (step !== 'guide') step = Math.min(5, Math.max(1, Number(step) || 1));
+    sub = step === 1 ? Math.min(groups.length - 1, Math.max(0, Number(sub) || 0)) : 0;
+    S.at = { step, sub };
+    document.querySelectorAll('main > .page').forEach((p) => p.classList.toggle('hidden', p.dataset.step !== String(step)));
+    if (step === 1) {
+      const g = groups[sub];
+      $('#sub-no').textContent = groups.length > 1 ? '· ' + (sub + 1) + ' / ' + groups.length : '';
+      $('#sub-title').textContent = g.이름;
+      $('#sub-desc').textContent = g.설명;
+      document.querySelectorAll('#form .fpage').forEach((p, i) => p.classList.toggle('hidden', i !== sub));
+      renderSubtabs();
+    }
+    if (step === 2) makePrompt();
+    if (step === 5) updateButtons();
+    refreshNav(); persist();
+    // 주소 끝(#step-3 등)으로 단계를 기억한다. 칸의 id와 겹치지 않는 이름이어야 브라우저가 멋대로 내려가지 않는다
+    try { history.replaceState(null, '', '#' + (step === 'guide' ? 'how' : 'step-' + step)); } catch (e) {}
+    window.scrollTo(0, 0);
+  }
+  const next = () => { const { step, sub } = S.at; if (step === 'guide') go(1, 0); else if (step === 1 && sub < groups.length - 1) go(1, sub + 1); else if (step < 5) go(step + 1); };
+  const prev = () => { const { step, sub } = S.at; if (step === 1 && sub > 0) go(1, sub - 1); else if (step === 1) go('guide'); else if (step === 2) go(1, groups.length - 1); else if (step !== 'guide') go(step - 1); };
+
+  function refreshNav() {
+    if (!S.at) return;
+    const { step, sub } = S.at;
+    const miss = missing().length;
+    const done = { 1: !miss, 2: S.gave, 3: !!S.data && !S.errors, 4: Object.keys(S.images).length > 0, 5: S.exported };
+    document.querySelectorAll('#steps [data-go]').forEach((b) => {
+      const n = +b.dataset.go, cur = n === step;
+      if (cur) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+      b.classList.toggle('done', !!done[n] && !cur);
+      b.querySelector('.n').textContent = done[n] && !cur ? '✓' : n;
+    });
+    const pb = $('#btn-prev'), nb = $('#btn-next');
+    pb.classList.toggle('gap', step === 'guide');
+    pb.textContent = step === 1 && sub === 0 ? '← 사용법' : '← 이전';
+    nb.classList.toggle('gap', step === 5);
+    nb.textContent = step === 'guide' ? '시작하기 →' : step === 1 && sub < groups.length - 1 ? '다음 →' : step < 5 ? '다음: ' + NEXT_NAME[step + 1] + ' →' : '';
+    $('#bar-hint').textContent = step === 'guide' ? '다섯 단계로 만듭니다'
+      : step === 1 ? (miss ? '필수 칸 ' + miss + '개가 비어 있어요' : '필수 칸을 모두 채웠어요')
+      : step === 2 ? (S.gave ? 'AI가 데이터를 다 쓰면 다음으로' : '글을 복사해 AI에게 붙여 넣으세요')
+      : step === 3 ? (!S.data ? 'AI의 답을 붙여 넣고 점검하세요' : S.errors ? '오류를 고쳐야 해 볼 수 있어요' : '점검을 통과했어요')
+      : step === 4 ? (slotTotal ? '그림 ' + slotTotal + '칸 가운데 ' + Object.keys(S.images).length + '칸을 채웠어요' : '그림은 넣지 않아도 됩니다') : '';
+  }
+  document.addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) go(+b.dataset.go); });
+  $('#btn-next').addEventListener('click', next);
+  $('#btn-prev').addEventListener('click', prev);
+  $('#btn-guide').addEventListener('click', () => go('guide'));
+  $('#btn-start').addEventListener('click', () => go(1, 0));
+
+  // ─────────── ① 설계서 ───────────
+  function fieldEl(f) {
+    const id = 'f-' + f.id;
+    const isChecks = f.종류 === 'checks';
+    const name = h(isChecks ? 'span' : 'label', { class: 'l', for: isChecks ? null : id }, f.이름, f.필수 ? h('span', { class: 'req' }, '필수') : null);
+    const help = f.도움말 ? h('p', { class: 'help', id: 'h-' + f.id }, f.도움말) : null;
+    let input;
+    if (f.종류 === 'select') { input = h('select', { id }, f.보기.map((o) => h('option', { value: o }, o))); input.value = S.form[f.id] || f.보기[0]; S.form[f.id] = input.value; }
+    else if (isChecks) {
+      const cur = S.form[f.id] || (S.form[f.id] = f.보기.slice());
+      input = h('div', { class: 'optlist', id, role: 'group', 'aria-label': f.이름 }, f.보기.map((o) => { const c = h('input', { type: 'checkbox' }); c.checked = cur.includes(o); c.addEventListener('change', () => { S.form[f.id] = f.보기.filter((x) => (x === o ? c.checked : S.form[f.id].includes(x))); persist(); }); return h('label', {}, c, h('span', {}, o)); }));
+    } else { input = h(f.종류 === 'textarea' ? 'textarea' : 'input', { id, type: f.종류 === 'textarea' ? null : 'text', placeholder: f.예시 ? '예: ' + f.예시.split('\n')[0] : '' }); input.value = S.form[f.id] || ''; }
+    if (help) input.setAttribute('aria-describedby', 'h-' + f.id);
+    if (!isChecks) input.addEventListener('input', () => { S.form[f.id] = input.value; persist(); refreshNav(); });
+    // AI에게 물어보기: 간단히 적은 메모와 수업 정보로 이 칸을 써 달라는 글을 복사하고, AI의 답을 붙여 넣는다
+    let tools = null;
+    if (f.물어보기) {
+      const undo = h('button', { class: 'sub small hidden', type: 'button', title: 'AI 답을 넣기 전으로' }, '되돌리기');
+      tools = h('span', { class: 'ask-tools' },
+        h('button', { class: 'sub small', type: 'button', title: '이 칸을 써 달라고 AI에게 줄 글을 복사합니다', onclick: async () => toast((await copy(fieldPrompt(f))) ? '「' + f.이름 + '」을(를) 물어볼 글을 복사했어요. AI 대화창에 붙여 넣고, 답을 복사해 [AI 답 붙여 넣기]를 누르세요.' : '복사하지 못했어요.') }, 'AI에게 물어보기'),
+        h('button', { class: 'sub small', type: 'button', title: '복사한 AI의 답을 이 칸에 넣습니다', onclick: () => pasteAnswer(f, input, undo) }, 'AI 답 붙여 넣기'), undo);
+    }
+    return h('div', { class: 'fld' + (f.종류 === 'textarea' || isChecks ? ' wide' : '') }, h('div', { class: 'lrow' }, name, tools), help, input);
+  }
+  // 이 칸을 써 달라는 글: 수업 정보(적은 칸들) + 이 칸에 쓸 것 + 선생님 메모
+  function fieldPrompt(f) {
+    // 내용에 도움이 되는 칸만 (색, 글꼴, 학생 정보, 만든이 같은 것과 'AI가 …' 로 남겨 둔 고르기는 빼고)
+    const SKIP = ['만든이', '그림체', '테마', '그림', '원칙', '주의'];
+    const ctx = fields.filter((x) => x.id !== f.id && !SKIP.includes(x.id) && x.종류 !== 'checks').map((x) => {
+      const v = S.form[x.id], t = String(v || '').trim();
+      if (x.종류 === 'select' && /^AI가/.test(t)) return null;
+      return t ? '- ' + x.이름 + ': ' + t.replace(/\s*\n+\s*/g, ' / ') : null;
+    }).filter(Boolean);
+    const memo = String(S.form[f.id] || '').trim();
+    return [
+      '수업용 법정 추리 게임의 「수업 설계서」를 쓰고 있어. 아래 수업 정보를 보고 「' + f.이름 + '」 칸에 들어갈 내용을 써 줘.', '',
+      '[수업 정보]', ...(ctx.length ? ctx : ['- (아직 적은 것이 없음)']), '',
+      '[이 칸에 쓸 것]', f.물어보기, ...(f.도움말 ? ['(참고: ' + f.도움말 + ')'] : []), '',
+      ...(memo ? ['[선생님이 간단히 적은 메모]', memo, '', '→ 이 메모를 바탕으로 다듬고, 빠진 것을 더해 줘. 메모의 뜻은 바꾸지 마.'] : ['→ 수업 정보에 맞게 새로 써 줘.']), '',
+      '[답하는 방법]', f.모양 === '글' ? '- 인사말이나 설명 없이, 이 칸에 바로 넣을 글만 써 줘.' : "- 한 줄에 하나씩 '- '로 시작하는 목록만 써 줘. 인사말, 설명, 제목은 쓰지 마.",
+      "- 지어내지 마. 확실하지 않은 사실은 끝에 '(확인 필요)'를 붙여 줘.",
+    ].join('\n');
+  }
+  // AI의 답 다듬기: 코드 묶음, 굵게 표시, 제목, 번호를 걷어 내고 목록이면 목록 줄만 남긴다
+  function cleanAnswer(t, asText) {
+    let lines = String(t).replace(/\r/g, '').replace(/```[a-z]*\n?/gi, '').split('\n')
+      .map((l) => l.replace(/\*\*(.+?)\*\*/g, '$1').replace(/^#+\s*/, '').replace(/^\s*(?:[*•·]|\d+[.)])\s+/, '- ').replace(/\s+$/, ''));
+    if (!asText) { const items = lines.filter((l) => /^\s*-\s+/.test(l)).map((l) => l.trim()); if (items.length) lines = items; }
+    return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  async function pasteAnswer(f, input, undo) {
+    let text = '';
+    try { text = await navigator.clipboard.readText(); } catch (e) {}
+    if (!text.trim()) { input.focus(); input.select(); toast('복사한 글을 읽지 못했어요. 칸을 눌러 Ctrl+V(맥은 ⌘+V)로 붙여 넣으세요.'); return; }
+    const prev = input.value;
+    input.value = cleanAnswer(text, f.모양 === '글');
+    input.dispatchEvent(new Event('input'));
+    undo.classList.remove('hidden');
+    undo.onclick = () => { input.value = prev; input.dispatchEvent(new Event('input')); undo.classList.add('hidden'); toast('AI 답을 넣기 전으로 되돌렸어요.'); };
+    toast('「' + f.이름 + '」에 AI의 답을 넣었어요. 고치거나 더 적어도 됩니다.');
+  }
+  function renderForm() {
+    const cur = S.at && S.at.step === 1 ? S.at.sub : 0;
+    const box = $('#form');
+    box.innerHTML = '';
+    groups.forEach((g, i) => box.append(h('div', { class: 'fpage' + (i === cur ? '' : ' hidden') }, g.칸.map(fieldEl))));
+  }
+  function renderSubtabs() {
+    const box = $('#subtabs');
+    box.innerHTML = '';
+    groups.forEach((g, i) => box.append(h('button', { type: 'button', 'aria-current': i === S.at.sub ? 'true' : null, onclick: () => go(1, i) }, (i + 1) + '. ' + g.이름)));
+    box.append(h('span', { class: 'saved' }, '쓴 내용은 자동으로 저장돼요'));
+    // 이 쪽에 AI에게 물어볼 수 있는 칸이 있으면 쓰는 법을 한 줄로
+    const tip = $('#ask-tip');
+    if (tip) tip.classList.toggle('hidden', !groups[S.at.sub].칸.some((f) => f.물어보기));
+  }
+  function fillExample() {
+    const typed = fields.some((f) => (f.종류 === 'text' || f.종류 === 'textarea') && String(S.form[f.id] || '').trim() && S.form[f.id] !== f.예시);
+    if (typed && !confirm('설계서에 쓴 내용을 예시로 바꿀까요?')) return false;
+    for (const f of fields) if (f.예시) S.form[f.id] = f.예시;
+    renderForm(); persist(); refreshNav();
+    return true;
+  }
+  $('#btn-example').addEventListener('click', fillExample);
+  $('#btn-start-example').addEventListener('click', () => { if (fillExample()) go(1, 0); });
+  $('#btn-clear').addEventListener('click', () => { if (!confirm('설계서에 쓴 내용을 모두 지울까요?')) return; S.form = {}; renderForm(); persist(); refreshNav(); });
+  renderForm();
+
+  // ─────────── ② AI에게 줄 글 ───────────
+  function buildPrompt() {
+    const plan = $('#opt-plan').checked, sample = $('#opt-sample').checked;
+    const sheet = fields.map((f) => { const v = S.form[f.id]; const t = Array.isArray(v) ? v.map((x) => '- ' + x).join('\n') : String(v || '').trim(); return '### ' + f.이름 + '\n' + (t || '(비워 둠: 알아서 정해 줘)'); }).join('\n\n');
+    return [
+      '아래 「AI 지침」과 「데이터 형식」을 읽고, 맨 아래 「수업 설계서」에 맞는 수업용 법정 추리 게임의 데이터를 만들어 줘.',
+      plan ? '먼저 **사건 설계안**을 표로 보여 줘. 내가 "좋아"라고 하면 그때 데이터를 통째로 써 줘.' : '설계안 확인 없이 **바로 데이터를 통째로** 써 줘. 설계서의 빈칸은 네가 가장 알맞게 정해 줘.',
+      '데이터는 코드 묶음 하나에 `DATA.게임` 과 `DATA.ep1` 을 줄이지 말고 모두 써 줘. 나는 그것을 그대로 복사해서 점검 도구에 붙여 넣을 거야.',
+      ...(verifyOn() ? ['', '# ' + V.제목, '', ...V.요청.map((t, i) => (i + 1) + '. ' + t)] : []),
+      '', '---', '', GUIDE.지침.trim(), '', '---', '', GUIDE.형식.trim(),
+      ...(sample ? ['', '---', '', '# 예시: 완성된 게임 데이터 (형식을 참고해. 내용은 베끼지 마)', '', '```js', GUIDE.예시설정.trim(), '', GUIDE.예시이야기.trim(), '```'] : []),
+      '', '---', '', '# 수업 설계서 (선생님이 쓴 것)', '', sheet, '',
+    ].join('\n');
+  }
+  const sizeText = (n) => (n >= 10000 ? '약 ' + Math.round(n / 1000) / 10 + '만 자' : '약 ' + Math.max(1, Math.round(n / 1000)) + '천 자');
+  function makePrompt() {
+    const p = $('#prompt');
+    p.value = buildPrompt();
+    $('#prompt-size').textContent = sizeText(p.value.length) + ' · 설계서, AI 지침, 데이터 형식' + ($('#opt-sample').checked ? ', 예시 게임' : '') + (verifyOn() ? ', 사실 검증' : '');
+    const miss = missing(), box = $('#prompt-miss');
+    box.innerHTML = '';
+    box.classList.toggle('hidden', !miss.length);
+    if (miss.length) box.append('비어 있는 필수 칸: ' + miss.map((f) => f.이름).join(', ') + '. 이대로 보내면 AI가 물어보거나 알아서 정합니다.',
+      h('button', { class: 'sub small', type: 'button', onclick: () => go(1, Math.max(0, groups.findIndex((g) => g.칸.includes(miss[0])))) }, '채우러 가기'));
+    const items = $('#opt-plan').checked ? [
+      ['AI', '사건 설계안을 보여 줍니다', '고칠 점은 말로 하면 됩니다. 예: "증인을 한 명 더 넣어 줘", "대사를 더 쉽게 써 줘"'],
+      ['선생님', '"좋아, 데이터로 써 줘"', '설계안이 마음에 들면 이렇게 말합니다. AI가 게임 데이터를 씁니다.'],
+      ['선생님', '데이터를 통째로 복사', [h('code', {}, 'DATA.게임'), ' 부터 끝까지 복사한 뒤 아래 [다음]을 누릅니다.']],
+    ] : [
+      ['AI', '바로 게임 데이터를 씁니다', '설계서의 빈칸은 AI가 알아서 정합니다.'],
+      ['선생님', '데이터를 통째로 복사', [h('code', {}, 'DATA.게임'), ' 부터 끝까지 복사한 뒤 아래 [다음]을 누릅니다.']],
+      ['선생님', '고치고 싶으면 말로', '예: "두 번째 증언이 너무 쉬워". 고친 뒤에는 전체를 다시 받습니다.'],
+    ];
+    $('#flow').replaceChildren(...items.map(([who, t, d], i) => h('li', {}, h('span', { class: 'k' }, (i + 1) + ' · ' + who), h('b', {}, t), d)));
+    $('#verify-tip').classList.toggle('hidden', !verifyOn());
+  }
+  const gave = () => { S.gave = true; persist(); refreshNav(); };
+  // 사실 검증 (판마다 ai/form.json 의 「검증」. 역사판은 항상 켠다)
+  const V = GUIDE.검증;
+  if (V) {
+    $('#opt-check-row').classList.remove('hidden');
+    $('#opt-check-text').append(V.이름 + ' ', h('small', {}, V.항상 ? '(' + GUIDE.판이름 + '은 항상: 데이터 앞에 「사실 검증표」를 보여 줍니다)' : '(권장: 데이터 앞에 「사실 검증표」를 보여 줍니다)'));
+    if (V.항상) { // 끌 수 없다 (흐리게 보이지 않게 disabled 대신 누르는 것만 막는다)
+      const c = $('#opt-check'); c.checked = true; c.setAttribute('aria-disabled', 'true');
+      c.addEventListener('click', (e) => { e.preventDefault(); toast(GUIDE.판이름 + '은 사실 검증을 항상 합니다.'); });
+    }
+  }
+  const verifyOn = () => !!V && (V.항상 || $('#opt-check').checked);
+  $('#opt-check').addEventListener('change', makePrompt);
+  $('#opt-plan').addEventListener('change', makePrompt);
+  $('#opt-sample').addEventListener('change', makePrompt);
+  $('#btn-copy').addEventListener('click', async () => { const ok = await copy($('#prompt').value); if (ok) gave(); say('#said-prompt', ok ? '복사했어요! AI 대화창에 붙여 넣으세요.' : '복사하지 못했어요. [글 내용 보기]를 열어 직접 복사해 주세요.'); });
+  $('#btn-save-prompt').addEventListener('click', () => { download('ai-prompt.md', $('#prompt').value, 'text/markdown'); gave(); });
+
+  // ─────────── ③ 점검 ───────────
+  const paste = $('#paste');
+  paste.value = S.text;
+  paste.addEventListener('input', () => { S.text = paste.value; persist(); });
+  const issueEl = (cls, title, text, help, code) => h('div', { class: 'issue ' + cls }, h('i', { class: 'dot', 'aria-hidden': 'true' }),
+    h('div', { class: 'tx' }, h('b', {}, title), text ? h('span', {}, text) : null, help ? h('small', {}, '→ ' + help) : null, code ? h('code', {}, code) : null));
+  const walk = (list, fn) => { for (const c of D.list(list)) { if (!c || typeof c !== 'object') continue; fn(c); for (const v of Object.values(c)) { if (Array.isArray(v)) walk(v.filter((x) => x && typeof x === 'object' && !Array.isArray(x)), fn); else if (v && typeof v === 'object') for (const vv of Object.values(v)) if (Array.isArray(vv)) walk(vv.filter((x) => x && typeof x === 'object'), fn); } } };
+  const episodes = (data) => Object.entries(data || {}).filter(([, d]) => d && Array.isArray(d.막)).sort((a, b) => (a[1].번호 || 0) - (b[1].번호 || 0));
+
+  function setData(data, images, audio) {
+    S.data = data; if (images) S.images = images; if (audio) S.audio = audio;
+    renderResult(); renderImages();
+  }
+  function runCheck() {
+    const r = window.KIT_PARSE(paste.value);
+    const box = $('#result');
+    if (r.errors.length) {
+      S.data = null; S.errors = 1;
+      box.innerHTML = '';
+      box.append(h('div', { class: 'issues' }, r.errors.map((e) => issueEl('err', '글을 읽지 못했어요', e.글, e.도움, e.보기 ? e.줄 + '번째 줄:  ' + e.보기.trim() : null))));
+      const msg = '네가 써 준 데이터를 읽다가 문제가 생겼어. 고쳐서 전체 데이터를 다시 써 줘.\n\n' + r.errors.map((e) => '- ' + e.글 + (e.보기 ? '\n  (그 줄: ' + e.보기.trim() + ')' : '')).join('\n');
+      box.append(h('div', { class: 'btns' }, h('button', { class: 'sub', type: 'button', onclick: async () => say('#said-check', (await copy(msg)) ? 'AI에게 보낼 글을 복사했어요.' : '복사하지 못했어요.') }, 'AI에게 보낼 수정 요청 복사')));
+      updateButtons(); renderImages();
+      return;
+    }
+    setData(r.data);
+    say('#said-check', '점검했어요.');
+  }
+  function renderResult() {
+    const box = $('#result');
+    box.innerHTML = '';
+    const data = S.data;
+    const issues = window.KIT_CHECK(data);
+    const n = (k) => issues.filter((i) => i.수준 === k).length;
+    S.errors = n('오류');
+    const eps = episodes(data);
+    let lines = 0, tests = 0, ev = 0;
+    eps.forEach(([, e]) => { ev += Object.keys(e.증거 || {}).length; walk(e.막.flatMap((m) => D.list(m.내용)), (c) => { if (c.말 !== undefined && c.대사 !== undefined) lines++; if (c.증언) tests++; if (c.글 && c.추궁) lines++; }); });
+    box.append(h('p', { class: 'gt' }, '「' + ((data.게임 || {}).제목 || '제목 없음') + '」'),
+      h('div', { class: 'stat' }, [['화', eps.length + '개'], ['인물', Object.keys((data.게임 || {}).인물 || {}).length + '명'], ['증거', ev + '개'], ['증언', tests + '개'], ['대사', '약 ' + lines + '줄'], ['예상 시간', '약 ' + Math.max(5, Math.round(lines * 7 / 60 / 5) * 5) + '분']]
+        .map(([k, v]) => h('div', {}, h('b', {}, v), h('small', {}, k)))));
+    const names = nameEditor(data);
+    if (names) box.append(names);
+    const list = h('div', { class: 'issues' });
+    if (!n('오류') && !n('주의')) list.append(issueEl('ok', '문제를 찾지 못했어요', '바로 해 볼 수 있습니다. 아래에서 끝까지 자동으로 실행해 본 결과도 확인하세요.'));
+    else list.append(issueEl(n('오류') ? 'err' : 'warn', '오류 ' + n('오류') + '개, 주의 ' + n('주의') + '개', n('오류') ? '오류는 꼭 고쳐야 합니다. 아래 [AI에게 보낼 수정 요청 복사]를 눌러 AI에게 붙여 넣으세요.' : '주의는 실행은 되지만 뜻한 대로 보이지 않을 수 있는 것입니다.'));
+    issues.filter((i) => i.수준 !== '참고').forEach((i) => list.append(issueEl(i.수준 === '오류' ? 'err' : 'warn', '[' + i.수준 + '] ' + i.곳, i.글, i.도움)));
+    box.append(list);
+    const auto = h('div', { class: 'issues' });
+    box.append(auto);
+    const fixMsg = () => '내 게임 데이터를 점검했더니 아래 문제가 나왔어. 문제를 고쳐서 DATA.게임 과 DATA.ep1 전체를 다시 써 줘. (줄이지 말고 통째로)\n\n'
+      + issues.filter((i) => i.수준 !== '참고').map((i) => '[' + i.수준 + '] ' + i.곳 + ': ' + i.글 + (i.도움 ? ' → ' + i.도움 : '')).join('\n') + (S.autoMsg ? '\n' + S.autoMsg : '');
+    if (n('오류') || n('주의')) box.append(h('div', { class: 'btns' }, h('button', { class: 'sub', type: 'button', onclick: async () => say('#said-check', (await copy(fixMsg())) ? 'AI에게 보낼 글을 복사했어요.' : '복사하지 못했어요.') }, 'AI에게 보낼 수정 요청 복사')));
+    const facts = eps.flatMap(([, e]) => D.list(e.사실확인).map((t) => '제' + e.번호 + '화: ' + t));
+    if (facts.length) box.append(h('details', { open: true }, h('summary', {}, '선생님이 확인할 사실 ' + facts.length + '개 (AI가 쓴 내용이 맞는지 꼭 확인하세요)'), h('div', { class: 'checks' }, facts.map((t) => h('label', {}, h('input', { type: 'checkbox' }), h('span', {}, t))))));
+    else box.append(h('div', { class: 'note warn' }, 'AI가 「사실확인」 목록을 쓰지 않았어요. AI가 지어낸 내용이 섞일 수 있으니, 교과 내용이 맞는지 직접 읽어 확인해 주세요.'));
+    const notes = issues.filter((i) => i.수준 === '참고');
+    if (notes.length) box.append(h('details', {}, h('summary', {}, '참고 ' + notes.length + '개 (더 좋게 만들 수 있는 것)'), h('div', { class: 'issues' }, notes.map((i) => issueEl('', i.곳, i.글, i.도움)))));
+    updateButtons();
+    S.autoMsg = '';
+    if (!n('오류')) autoRun(auto);
+  }
+  // 인물 이름 바꾸기: 설정의 이름바꾸기를 고친다. 이야기는 그대로 두고, 게임을 시작할 때 대사 속 이름까지 바뀐다
+  function nameEditor(data) {
+    const g = data.게임 || {}, people = Object.keys(g.인물 || {});
+    if (!people.length) return null;
+    const cur = Object.assign({}, g.이름바꾸기);
+    const rows = people.map((n) => [n, h('input', { type: 'text', value: String(cur[n] || n), 'aria-label': n + '의 새 이름' })]);
+    const apply = () => {
+      const m = {};
+      let changed = false;
+      for (const [n, i] of rows) { const v = i.value.trim() || n; m[n] = v; if (v !== String(cur[n] || n)) changed = true; }
+      if (!changed) { say('#said-names', '바뀐 이름이 없어요.'); return; }
+      (S.data.게임 = S.data.게임 || {}).이름바꾸기 = m;
+      paste.value = S.text = window.KIT_STRINGIFY(S.data).all; persist();
+      renderResult(); renderImages();
+      toast('이름을 바꿨어요. 게임에서는 대사 속 이름까지 모두 바뀝니다.');
+    };
+    return h('details', { class: 'names', open: Object.entries(cur).some(([o, n]) => n && n !== o) || null }, h('summary', {}, '인물 이름 바꾸기'),
+      h('p', { class: 'help' }, '오른쪽 칸만 고치면 됩니다. 이야기는 그대로 두고, 게임에 나오는 이름과 대사 속 이름이 모두 바뀝니다. 은/는, 이/가 같은 말도 새 이름에 맞춥니다.'),
+      h('div', { class: 'name-grid' }, rows.map(([n, i]) => h('label', {}, h('span', {}, n), i))),
+      h('div', { class: 'btns' }, h('button', { class: 'sub', type: 'button', onclick: apply }, '이름 바꾸기'), h('span', { class: 'said', id: 'said-names' })));
+  }
+  // 정답을 스스로 내면서 끝까지 실행해 본다 (보이지 않는 창에서)
+  let autoTimer = null;
+  function autoRun(box) {
+    const frame = $('#autoframe');
+    box.innerHTML = '';
+    box.append(issueEl('', '끝까지 자동으로 실행해 보는 중…', '정답을 스스로 내면서 처음부터 끝까지 돌려 봅니다.'));
+    const done = (r) => {
+      clearTimeout(autoTimer); window.removeEventListener('message', onMsg);
+      frame.classList.add('hidden'); frame.removeAttribute('srcdoc');
+      box.innerHTML = '';
+      if (r.ok) box.append(issueEl('ok', '끝까지 실행됐어요', '처음부터 끝까지 막히는 곳 없이 실행됩니다.'));
+      else { S.autoMsg = r.문제.map((p) => '[실행 중 문제] ' + (p.화 ? '제' + p.화 + '화: ' : '') + p.글).join('\n'); r.문제.forEach((p) => box.append(issueEl('err', '실행 중 문제' + (p.화 ? ' (제' + p.화 + '화)' : ''), p.글))); }
+    };
+    const onMsg = (e) => { if (e.data && e.data.kitAuto) done(e.data.kitAuto); };
+    window.addEventListener('message', onMsg);
+    clearTimeout(autoTimer);
+    autoTimer = setTimeout(() => done({ ok: false, 문제: [{ 글: '40초 안에 끝나지 않았어요. 어딘가에서 멈춘 것 같아요. 5단계의 [새 창에서 해 보기]로 직접 확인해 주세요.' }] }), 40000);
+    frame.classList.remove('hidden');
+    frame.srcdoc = window.KIT_EXPORT({ bundle: BUNDLE, data: S.data, images: {}, audio: {}, flags: ['auto'] });
+  }
+  $('#btn-check').addEventListener('click', runCheck);
+  $('#btn-load-file').addEventListener('click', () => $('#file').click());
+  $('#file').addEventListener('change', async (e) => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    const text = await f.text();
+    const pack = window.KIT_IMPORT(text);
+    if (pack) { paste.value = S.text = window.KIT_STRINGIFY(pack.data).all; persist(); setData(pack.data, pack.images || {}, pack.audio || {}); say('#said-check', '게임 파일을 불러왔어요. (그림 ' + Object.keys(pack.images || {}).length + '개 포함)'); }
+    else { paste.value = S.text = text; persist(); runCheck(); }
+  });
+  $('#btn-load-folder').addEventListener('click', async () => {
+    window.DATA = {};
+    const one = (src) => new Promise((res) => { const s = document.createElement('script'); s.src = src; s.onload = () => res(true); s.onerror = () => res(false); document.head.append(s); });
+    const ok = await one('my-game/settings.js');
+    for (let i = 1; i <= 12; i++) await one('my-game/story' + i + '.js');
+    if (!ok && !Object.keys(window.DATA).length) { say('#said-check', 'my-game 폴더의 파일을 찾지 못했어요.'); return; }
+    const data = JSON.parse(JSON.stringify(window.DATA));
+    paste.value = S.text = window.KIT_STRINGIFY(data).all; persist();
+    setData(data);
+    say('#said-check', 'my-game 폴더의 게임을 불러왔어요.');
+  });
+
+  // ─────────── ④ 그림 만들기 ───────────
+  // 그림 칸마다 그림 AI에 줄 글(프롬프트)을 만든다. 받은 그림을 칸에 넣으면 크기를 줄이고, 인물의 단색 배경은 지운다
+  const STYLE_DEFAULT = '따뜻한 색감의 애니메이션풍 일러스트';
+  const STYLE_PRESETS = [STYLE_DEFAULT, '차분한 색감의 그림책 일러스트', '부드러운 수채화', '깔끔한 평면 일러스트', '연필 스케치에 옅은 채색'];
+  const styleOf = () => String(S.style || ((S.data || {}).게임 || {}).그림체 || S.form.그림체 || STYLE_DEFAULT).trim();
+  const EXPR_LOOK = {
+    default: '편안한 기본 얼굴', smile: '환하게 웃는 얼굴', surprised: '깜짝 놀라 눈을 크게 뜬 얼굴', think: '턱에 손을 대고 생각에 잠긴 얼굴',
+    flustered: '당황해서 땀을 흘리는 얼굴', serious: '진지하고 단호한 얼굴', sad: '슬퍼서 눈물이 맺힌 얼굴', angry: '화가 나서 소리치는 얼굴',
+    confident: '자신만만하게 웃는 얼굴', determined: '굳게 결심한 얼굴', worried: '걱정스러운 얼굴', relieved: '안도의 한숨을 쉬는 얼굴',
+    smirk: '한쪽 입꼬리만 올려 비웃는 얼굴', scared: '겁에 질린 얼굴', stern: '엄숙하고 근엄한 얼굴', grateful: '고마워서 감동한 얼굴',
+    awkward: '난처해서 어색하게 웃는 얼굴', sorry: '미안해서 고개를 살짝 숙인 얼굴', blank: '아무 표정 없는 얼굴', tired: '지쳐서 축 처진 얼굴',
+    back: '뒤돌아선 뒷모습 (얼굴이 보이지 않게)',
+  };
+  const SEAT_LOOK = {
+    전경: '법정 전체를 방청석 쪽에서 정면으로 본 모습. 가운데 높은 재판장석, 그 앞의 증언대, 왼쪽 변호인석, 오른쪽 검사석.',
+    변호인석: '법정 안, 변호인석에 선 사람의 뒤로 보이는 벽 (가운데에 인물이 서고, 아래에 책상이 놓인다).',
+    검사석: '법정 안, 검사석에 선 사람의 뒤로 보이는 벽 (가운데에 인물이 서고, 아래에 책상이 놓인다).',
+    증언대: '법정 안, 증언대에 선 증인의 뒤로 보이는 방청석과 벽 (가운데에 인물이 선다).',
+    피고석: '법정 안, 피고석에 앉은 사람의 뒤로 보이는 벽 (가운데에 인물이 앉는다).',
+    재판장석: '법정 안, 높은 재판장석과 그 뒤의 벽 (가운데에 재판장이 앉는다).',
+  };
+  const SEAT_DESK = { 변호인석: '변호인석 책상의 앞면', 검사석: '검사석 책상의 앞면', 증언대: '증언대(가운데의 작은 단상)의 앞면', 피고석: '피고석 앞의 낮은 난간' };
+  function imageSlots() {
+    const g = (S.data || {}).게임 || {};
+    const expr = Object.assign({}, D.EXPR, g.표정);
+    const used = {}; // 인물 → 쓰인 표정
+    const add = (n, e) => { if (g.인물 && g.인물[n]) (used[n] = used[n] || new Set(['기본'])).add(expr[e] ? e : '기본'); };
+    const evs = [];
+    episodes(S.data).forEach(([, ep]) => {
+      Object.entries(ep.증거 || {}).forEach(([id, e]) => evs.push({ kind: 'ev', key: e.그림 || 'evidence/' + id, 이름: e.이름 || id, desc: e.그림설명 || '', 설명: D.list(e.설명).join(' ').replace(/\*\*/g, ''), max: 768 }));
+      walk(ep.막.flatMap((m) => D.list(m.내용)), (c) => { if (c.말) add(c.말, c.표정); if (c.보이기) add(c.보이기, c.표정); if (c.등장) add(c.등장, c.표정); if (c.증인) add(c.증인, c.표정); if (c.보기) add(c.보기, c.보기표정); });
+    });
+    const chars = [], shown = (n) => String((g.이름바꾸기 || {})[n] || '').trim() || n; // 이름바꾸기로 바꾼 이름
+    for (const [n, c] of Object.entries(g.인물 || {})) for (const e of used[n] || ['기본']) chars.push({ kind: 'char', key: 'characters/' + (c.파일 || 'char_' + n) + '_' + expr[e], 이름: shown(n) + ' · ' + e, who: shown(n), first: e === '기본', look: EXPR_LOOK[expr[e]] || e, desc: c.생김새 || '', max: 1024, cut: true });
+    const bgs = Object.entries(g.배경 || {}).filter(([, b]) => b && !b.법정 && b.그림 !== null).map(([n, b]) => ({ kind: 'place', key: b.그림 || 'backgrounds/' + n, 이름: n, desc: b.그림설명 || '', wide: true, max: 1536 }));
+    const court = Object.entries(D.SEATS).flatMap(([n, z]) => [{ kind: 'seat', seat: n, key: z.배경, 이름: n + ' 배경', wide: true, max: 1536 }, z.책상 ? { kind: 'seat', seat: n, desk: true, key: z.책상, 이름: n + ' 책상 (앞그림)', wide: true, max: 1536, cut: true } : null]).filter(Boolean);
+    const title = [g.제목그림 ? { kind: 'logo', key: g.제목그림, 이름: '제목 그림 (글자 대신)', wide: true, max: 1536, cut: true } : null, g.처음화면그림 ? { kind: 'cover', key: g.처음화면그림, 이름: '처음 화면 그림', wide: true, max: 1536 } : null].filter(Boolean);
+    return { chars, bgs, court, title, evs };
+  }
+  // 그림 AI에 줄 글. 인물의 두 번째 표정부터는 "앞에서 그린 그 사람" 으로 이어 그리게 한다 (같은 대화에서)
+  function promptFor(s) {
+    const g = (S.data || {}).게임 || {};
+    const head = ['「' + (g.제목 || '수업 게임') + '」 게임에 쓸 그림을 한 장 그려 줘.', '그림체: ' + styleOf() + '. 이 게임의 모든 그림을 이 그림체로 맞춘다.'];
+    const clear = '배경은 투명하게 (PNG). 투명이 안 되면 무늬 없는 단색 자홍색(#FF00FF)으로 칠해 줘.';
+    const noText = '글자, 말풍선, 테두리, 워터마크는 넣지 마.';
+    if (s.kind === 'char') {
+      if (!s.first) return ['앞에서 그린 「' + s.who + '」와 똑같은 사람을 한 장 더 그려 줘. 얼굴 생김새, 머리 모양, 옷, 그림체, 구도, 크기를 모두 같게 하고 표정만 바꿔 줘.', '표정: ' + s.look, '정사각형(1:1). ' + clear, noText].join('\n');
+      return [...head, '인물: 「' + s.who + '」' + (s.desc ? ', ' + s.desc : ''), '표정: ' + s.look, '구도: 허리 위 상반신, 정면을 보고 선 모습. 머리는 위쪽 가운데, 정수리 위에 여백을 조금. 정사각형(1:1).', clear, noText].join('\n');
+    }
+    if (s.kind === 'place') return [...head, '장소: 「' + s.이름 + '」' + (s.desc ? ', ' + s.desc : ''), '구도: 가로 3 : 세로 2. 사람 없이 장소만. 아래쪽 4분의 1은 대사창에 가려지니 중요한 것은 위쪽과 가운데에.', noText].join('\n');
+    if (s.kind === 'seat' && s.desk) return [...head, '법정의 ' + SEAT_DESK[s.seat] + '만 그려 줘. 그림 아래쪽 3분의 1에 가로로 길게 놓이고, 나머지는 비워 둔다. 앞에서 그린 「' + s.seat + ' 배경」과 같은 나무, 같은 색으로.', '구도: 가로 3 : 세로 2.', clear, noText].join('\n');
+    if (s.kind === 'seat') return [...head, '장소: ' + SEAT_LOOK[s.seat], '구도: 가로 3 : 세로 2. 사람 없이.', noText].join('\n');
+    if (s.kind === 'logo') return [...head, '게임 제목 로고: 「' + (g.제목 || '') + '」. 제목 글자를 크고 또렷하게, 장식은 주제에 맞게.', '가로로 긴 모양. ' + clear, '제목 말고 다른 글자는 넣지 마.'].join('\n');
+    if (s.kind === 'cover') return [...head, '처음 화면 그림: 게임의 분위기를 보여 주는 장소. 가운데에 제목과 버튼이 올라가니 가운데는 차분하게.', '구도: 가로 3 : 세로 2. 사람 없이.', noText].join('\n');
+    return [...head, '증거: 「' + s.이름 + '」' + (s.desc ? ', ' + s.desc : s.설명 ? ' (' + s.설명.slice(0, 90) + ')' : ''), '구도: 정사각형(1:1). 물건 하나가 가운데에 크게, 배경은 단순하게.', '글자는 넣지 마 (그림 AI는 한글을 잘 못 쓴다). 문서라면 글줄을 흐린 선으로만.'].join('\n');
+  }
+  // 단색 배경 지우기: 위쪽과 양옆 가장자리에서 이어진, 가장자리와 같은 색을 투명하게 한다.
+  // 이미 투명한 그림, 배경이 한 가지 색이 아닌 그림은 그대로 둔다. 지웠으면 true
+  function cutFlatBackground(canvas) {
+    const W = canvas.width, H = canvas.height, ctx = canvas.getContext('2d');
+    const img = ctx.getImageData(0, 0, W, H), d = img.data;
+    const seeds = [];
+    for (let x = 0; x < W; x++) seeds.push(x);
+    for (let y = 1; y < Math.floor(H * 0.6); y++) seeds.push(y * W, y * W + W - 1);
+    if (seeds.filter((p) => d[p * 4 + 3] < 200).length > seeds.length * 0.2) return false; // 이미 투명
+    const count = {};
+    for (const p of seeds) { const k = (d[p * 4] >> 4) + ',' + (d[p * 4 + 1] >> 4) + ',' + (d[p * 4 + 2] >> 4); count[k] = (count[k] || 0) + 1; }
+    const [top, n] = Object.entries(count).sort((a, b) => b[1] - a[1])[0];
+    if (n < seeds.length * 0.5) return false; // 배경이 한 가지 색이 아니다
+    const [kr, kg, kb] = top.split(',').map(Number);
+    let r = 0, gg = 0, b = 0, m = 0;
+    for (const p of seeds) if ((d[p * 4] >> 4) === kr && (d[p * 4 + 1] >> 4) === kg && (d[p * 4 + 2] >> 4) === kb) { r += d[p * 4]; gg += d[p * 4 + 1]; b += d[p * 4 + 2]; m++; }
+    r /= m; gg /= m; b /= m;
+    const T = 60 * 60, dist = (p) => { const dr = d[p * 4] - r, dg = d[p * 4 + 1] - gg, db = d[p * 4 + 2] - b; return dr * dr + dg * dg + db * db; };
+    const bg = new Uint8Array(W * H), queue = new Int32Array(W * H);
+    let qh = 0, qt = 0;
+    for (const p of seeds) if (!bg[p] && dist(p) < T) { bg[p] = 1; queue[qt++] = p; }
+    while (qh < qt) {
+      const p = queue[qh++], x = p % W, y = (p - x) / W;
+      for (const q of [x > 0 ? p - 1 : -1, x < W - 1 ? p + 1 : -1, y > 0 ? p - W : -1, y < H - 1 ? p + W : -1]) if (q >= 0 && !bg[q] && dist(q) < T) { bg[q] = 1; queue[qt++] = q; }
+    }
+    if (qt < W * H * 0.05) return false; // 지울 곳이 거의 없다
+    // 머리카락과 어깨 사이처럼 갇힌 틈: 배경이 자홍색처럼 짙은 색일 때만 같은 색 덩어리를 지운다 (흰 배경이면 흰 옷이 지워질 수 있어서)
+    const km0 = (r + gg + b) / 3, sat = Math.sqrt((r - km0) ** 2 + (gg - km0) ** 2 + (b - km0) ** 2);
+    if (sat > 90) {
+      const seen = new Uint8Array(W * H);
+      for (let s0 = 0; s0 < W * H; s0++) {
+        if (bg[s0] || seen[s0] || dist(s0) >= 30 * 30) continue;
+        qh = qt = 0; queue[qt++] = s0; seen[s0] = 1;
+        while (qh < qt) {
+          const p = queue[qh++], x = p % W, y = (p - x) / W;
+          for (const q of [x > 0 ? p - 1 : -1, x < W - 1 ? p + 1 : -1, y > 0 ? p - W : -1, y < H - 1 ? p + W : -1]) if (q >= 0 && !bg[q] && !seen[q] && dist(q) < T) { seen[q] = 1; queue[qt++] = q; }
+        }
+        if (qt >= 4) for (let i = 0; i < qt; i++) bg[queue[i]] = 1;
+      }
+    }
+    // 테두리 띠(배경에서 3칸 안): 배경색이 섞인 점. 가까운 곳에서 배경과 가장 다른 색을 기준으로 얼마나 섞였는지 재서 배경색을 빼낸다
+    const band = new Uint8Array(W * H);
+    for (let pass = 1; pass <= 3; pass++) {
+      for (let p = 0; p < W * H; p++) {
+        if (bg[p] || band[p]) continue;
+        const x = p % W, near = (q) => bg[q] || (band[q] && band[q] < pass);
+        if ((x > 0 && near(p - 1)) || (x < W - 1 && near(p + 1)) || (p >= W && near(p - W)) || (p < W * H - W && near(p + W))) band[p] = pass + 10;
+      }
+      for (let p = 0; p < W * H; p++) if (band[p] === pass + 10) band[p] = pass;
+    }
+    const out = new Uint8ClampedArray(d);
+    for (let p = 0; p < W * H; p++) {
+      if (bg[p]) { out[p * 4 + 3] = 0; continue; }
+      if (!band[p]) continue;
+      const x = p % W, y = (p - x) / W;
+      let best = dist(p); // 둘레 9×9 안에서 배경과 가장 다른 색들 (섞이지 않은 앞쪽 색)
+      for (let yy = Math.max(0, y - 4); yy <= Math.min(H - 1, y + 4); yy++) for (let xx = Math.max(0, x - 4); xx <= Math.min(W - 1, x + 4); xx++) { const q = yy * W + xx; if (!bg[q]) best = Math.max(best, dist(q)); }
+      let fr = 0, fg = 0, fb = 0, k = 0;
+      for (let yy = Math.max(0, y - 4); yy <= Math.min(H - 1, y + 4); yy++) for (let xx = Math.max(0, x - 4); xx <= Math.min(W - 1, x + 4); xx++) {
+        const q = yy * W + xx;
+        if (!bg[q] && dist(q) >= best * 0.8) { fr += d[q * 4]; fg += d[q * 4 + 1]; fb += d[q * 4 + 2]; k++; }
+      }
+      fr /= k; fg /= k; fb /= k;
+      const vr = fr - r, vg = fg - gg, vb = fb - b, vv = vr * vr + vg * vg + vb * vb || 1;
+      const a = Math.max(0, Math.min(1, ((d[p * 4] - r) * vr + (d[p * 4 + 1] - gg) * vg + (d[p * 4 + 2] - b) * vb) / vv));
+      if (a < 0.08) { out[p * 4 + 3] = 0; continue; }
+      const un = (c, bgc, fc) => (a > 0.35 ? (c - (1 - a) * bgc) / a : fc); // 섞인 배경색을 빼낸 색
+      let cr = un(d[p * 4], r, fr), cg = un(d[p * 4 + 1], gg, fg), cb = un(d[p * 4 + 2], b, fb);
+      // 그래도 남은 배경색 기운을 덜어 낸다 (테두리에서만)
+      const km = (r + gg + b) / 3, kr = r - km, kg = gg - km, kb = b - km, kl = Math.sqrt(kr * kr + kg * kg + kb * kb);
+      if (kl > 40) { const cm = (cr + cg + cb) / 3, sp = ((cr - cm) * kr + (cg - cm) * kg + (cb - cm) * kb) / kl; if (sp > 0) { cr -= sp * kr / kl; cg -= sp * kg / kl; cb -= sp * kb / kl; } }
+      out[p * 4] = cr; out[p * 4 + 1] = cg; out[p * 4 + 2] = cb;
+      out[p * 4 + 3] = Math.round(d[p * 4 + 3] * a);
+    }
+    d.set(out);
+    ctx.putImageData(img, 0, 0);
+    return true;
+  }
+  function fileToDataUrl(file, max, cut) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const im = new Image();
+      im.onload = () => {
+        const k = Math.min(1, max / Math.max(im.width, im.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        const cutDone = cut && S.cut !== false && cutFlatBackground(c);
+        let out = c.toDataURL('image/webp', 0.86);
+        if (!out.startsWith('data:image/webp')) out = c.toDataURL(cut || file.type !== 'image/jpeg' ? 'image/png' : 'image/jpeg', 0.88);
+        resolve({ url: out, cut: cutDone });
+      };
+      im.onerror = () => { URL.revokeObjectURL(url); reject(new Error('그림을 읽지 못했어요')); };
+      im.src = url;
+    });
+  }
+  let toastTimer = null;
+  const toast = (t) => { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), 3200); };
+  function slotEl(s) {
+    const pic = h('button', { class: 'pic', type: 'button', title: '그림 고르기 (끌어다 놓아도 됩니다)' });
+    const draw = () => { pic.innerHTML = ''; if (S.images[s.key]) pic.append(h('img', { src: S.images[s.key], alt: '' })); else pic.textContent = '＋'; del.disabled = !S.images[s.key]; el.classList.toggle('done', !!S.images[s.key]); sizeNote(); };
+    const put = async (file) => {
+      if (!file || !/^image\//.test(file.type)) return;
+      try { const r = await fileToDataUrl(file, s.max, s.cut); S.images[s.key] = r.url; draw(); toast('「' + s.이름 + '」 그림을 넣었어요.' + (r.cut ? ' 단색 배경을 지웠어요.' : '')); } catch (e) { alert(e.message); }
+    };
+    const input = h('input', { type: 'file', accept: 'image/*', class: 'hidden' });
+    input.addEventListener('change', () => { put(input.files[0]); input.value = ''; });
+    pic.addEventListener('click', () => input.click());
+    const del = h('button', { class: 'sub small x', type: 'button', title: '그림 지우기', 'aria-label': s.이름 + ' 그림 지우기', onclick: () => { delete S.images[s.key]; draw(); } }, '✕');
+    const ask = h('button', { class: 'small ask', type: 'button', title: '그림 AI에 줄 글 복사', onclick: async () => toast((await copy(promptFor(s))) ? '「' + s.이름 + '」 프롬프트를 복사했어요. 그림 AI에 붙여 넣으세요.' : '복사하지 못했어요.') }, '프롬프트');
+    const el = h('div', { class: 'slot' + (s.wide ? ' wide' : ''), title: s.key }, pic, h('b', {}, s.이름), h('div', { class: 'row' }, ask, del), input);
+    el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag'));
+    el.addEventListener('drop', (e) => { e.preventDefault(); el.classList.remove('drag'); put(e.dataTransfer.files[0]); });
+    draw();
+    return el;
+  }
+  let slotTotal = 0;
+  function sizeNote() {
+    refreshNav();
+    const el = $('#img-size');
+    if (!el) return;
+    const bytes = Object.values(S.images).reduce((a, v) => a + v.length * 0.75, 0);
+    const filled = document.querySelectorAll('#images .slot.done').length;
+    el.textContent = slotTotal + '칸 가운데 ' + filled + '칸을 채웠어요 · 넣은 그림 약 ' + (bytes / 1024 / 1024).toFixed(1) + 'MB' + (bytes > 25e6 ? ' (파일이 큽니다. 학생 기기에서 느릴 수 있어요)' : '');
+  }
+  function allPrompts(sl) {
+    const list = [...sl.title, ...sl.chars, ...sl.bgs, ...sl.evs, ...sl.court];
+    return ['아래 그림들을 한 장씩 차례로 그려 줘. 모든 그림의 그림체를 같게 맞춰 줘.', ''].concat(list.map((s, i) => '## ' + (i + 1) + '. ' + s.이름 + '\n' + promptFor(s) + '\n')).join('\n');
+  }
+  function renderImages() {
+    const box = $('#images');
+    box.innerHTML = '';
+    if (!S.data) { slotTotal = 0; box.append(h('div', { class: 'note' }, '먼저 3단계에서 AI의 답을 점검해 주세요. 그러면 필요한 그림 칸이 나옵니다. ', h('button', { class: 'sub small', type: 'button', 'data-go': '3' }, '3단계로 가기'))); refreshNav(); return; }
+    const sl = imageSlots();
+    slotTotal = sl.title.length + sl.chars.length + sl.bgs.length + sl.evs.length + sl.court.length;
+    const styleInput = h('input', { type: 'text', id: 'img-style', list: 'img-style-list', value: styleOf(), 'aria-describedby': 'img-style-help' });
+    styleInput.addEventListener('change', () => { S.style = styleInput.value.trim(); persist(); toast('그림체를 바꿨어요. 이제 복사하는 프롬프트에 들어갑니다.'); });
+    const cutBox = h('input', { type: 'checkbox', id: 'img-cut' });
+    cutBox.checked = S.cut !== false;
+    cutBox.addEventListener('change', () => { S.cut = cutBox.checked; persist(); });
+    const group = (title, list, open, note) => list.length ? h('details', { open: open || null }, h('summary', {}, title + ' (' + list.length + ')'), note ? h('p', { class: 'help' }, note) : null, h('div', { class: 'slots' }, list.map(slotEl))) : null;
+    box.append(
+      h('div', { class: 'imgtools' },
+        h('div', { class: 'fld' }, h('label', { class: 'l', for: 'img-style' }, '그림체'), h('p', { class: 'help', id: 'img-style-help' }, '모든 프롬프트에 들어가서 그림을 같은 그림체로 맞춥니다.'), styleInput,
+          h('datalist', { id: 'img-style-list' }, STYLE_PRESETS.map((t) => h('option', { value: t })))),
+        h('div', { class: 'tools-r' },
+          h('label', { class: 'chk' }, cutBox, h('span', {}, '인물 그림의 단색 배경을 저절로 지우기')),
+          h('button', { class: 'sub small', type: 'button', onclick: async () => toast((await copy(allPrompts(sl))) ? '프롬프트 ' + slotTotal + '개를 한꺼번에 복사했어요.' : '복사하지 못했어요.') }, '프롬프트 모두 복사'))),
+      h('ol', { class: 'flow' },
+        h('li', {}, h('span', { class: 'k' }, '1 · 이 화면'), h('b', {}, '[프롬프트] 복사'), '칸 아래의 [프롬프트]를 누르면 그 그림에 맞는 글이 복사됩니다.'),
+        h('li', {}, h('span', { class: 'k' }, '2 · 그림 AI'), h('b', {}, '붙여 넣고 그리기'), 'ChatGPT, Gemini 같은 그림 AI에 붙여 넣습니다. 인물은 「기본」을 먼저 그리고, 같은 대화에서 다른 표정을 이어서 그리면 같은 사람으로 나옵니다.'),
+        h('li', {}, h('span', { class: 'k' }, '3 · 이 화면'), h('b', {}, '칸에 넣기'), '받은 그림을 칸에 끌어다 놓거나 칸을 눌러 고릅니다. 크기는 알아서 줄이고, 인물의 단색 배경은 지웁니다.')),
+      h('div', { class: 'note', id: 'img-size' }),
+      ...[group('처음 화면', sl.title, true), group('인물', sl.chars, true, '「기본」 표정부터 그리세요. 없는 표정은 기본 표정으로 나옵니다.'), group('장소', sl.bgs, true),
+        group('증거', sl.evs, false), group('법정 (없으면 코드로 그린 법정)', sl.court, false, '책상(앞그림)은 인물 앞에 겹쳐 보입니다. 배경을 먼저 그리고 같은 대화에서 책상을 그리세요.')].filter(Boolean),
+      h('div', { class: 'note warn' }, '그림은 내가 그렸거나 그림 AI로 만든 것, 쓸 수 있다고 허락받은 것만 넣으세요. 인터넷에서 찾은 그림, 교과서 그림, 다른 게임이나 만화의 그림은 저작권 문제가 생길 수 있습니다. 그림 AI의 이용 조건도 확인해 주세요. (docs/그림_넣기.md)'));
+    sizeNote();
+  }
+
+  // ─────────── ⑤ 해 보기 · 내보내기 ───────────
+  function updateButtons() {
+    const ok = !!S.data && !S.errors;
+    for (const id of ['#btn-play', '#btn-play-teacher', '#btn-export', '#btn-export-js']) $(id).disabled = !ok;
+    $('#need-check').classList.toggle('hidden', ok);
+    refreshNav();
+  }
+  const htmlOf = (flags) => window.KIT_EXPORT({ bundle: BUNDLE, data: S.data, images: S.images, audio: S.audio, flags });
+  // 파일 이름은 영어로 (한글 이름은 기기에 따라 깨지거나 주소로 쓰기 불편하다). 설정의 아이디를 쓴다
+  const fileName = () => (String((S.data.게임 || {}).아이디 || '').replace(/[^A-Za-z0-9_-]+/g, '') || 'my-game');
+  const open = (flags) => { const w = window.open(URL.createObjectURL(new Blob([htmlOf(flags)], { type: 'text/html' })), '_blank'); if (!w) alert('새 창이 막혔어요. 브라우저의 팝업 차단을 풀거나, [게임 파일 하나로 받기]로 받아서 열어 주세요.'); };
+  const exported = () => { S.exported = true; refreshNav(); };
+  $('#btn-play').addEventListener('click', () => open([]));
+  $('#btn-play-teacher').addEventListener('click', () => open(['teacher']));
+  $('#btn-export').addEventListener('click', () => { download(fileName() + '.html', htmlOf([]), 'text/html'); exported(); say('#said-export', '받았어요. 내려받은 파일을 두 번 누르면 게임이 열려요.'); });
+  $('#btn-export-js').addEventListener('click', () => {
+    const s = window.KIT_STRINGIFY(S.data);
+    if (s.settings) download('settings.js', s.settings, 'text/javascript');
+    s.stories.forEach((st, i) => setTimeout(() => download('story' + (st.번호 || i + 1) + '.js', st.text, 'text/javascript'), 300 * (i + 1)));
+    exported();
+    say('#said-export', '받은 파일을 키트의 my-game 폴더에 넣으세요 (있던 파일을 바꿉니다).');
+  });
+
+  window.KIT_MAKER = { S, runCheck, buildPrompt, imageSlots, promptFor, cutFlatBackground, fieldPrompt, cleanAnswer, fields, htmlOf, go }; // 시험용
+
+  // 처음 연 사람은 사용법부터, 쓰던 사람은 하던 단계부터
+  const hash = location.hash.match(/^#step-([1-5])$/);
+  const at = saved.at;
+  if (hash) go(+hash[1]);
+  else if (location.hash === '#how') go('guide');
+  else if (at && (at.step === 'guide' || [1, 2, 3, 4, 5].includes(at.step))) go(at.step, at.sub);
+  else go(returning ? 1 : 'guide');
+  renderImages(); updateButtons();
+  if (S.text.trim()) runCheck();
+})();
+</script>
+</body>
+</html>
